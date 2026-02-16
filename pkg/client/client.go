@@ -133,6 +133,10 @@ func CreateVaultClientForSession(ctx context.Context, session server.ClientSessi
 		if ok {
 			vaultSkipTLSVerify, _ = strconv.ParseBool(skipTLSStr)
 		}
+	} else {
+		// Fall back to environment variable if not in context
+		skipTLSEnv := getEnv(VaultSkipTLSVerify, "false")
+		vaultSkipTLSVerify, _ = strconv.ParseBool(skipTLSEnv)
 	}
 
 	newClient, err := NewVaultClient(session.SessionID(), vaultAddress, vaultSkipTLSVerify, vaultToken, vaultNamespace)
