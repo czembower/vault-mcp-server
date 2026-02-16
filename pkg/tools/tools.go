@@ -4,6 +4,7 @@
 package tools
 
 import (
+	"github.com/hashicorp/vault-mcp-server/pkg/tools/auth"
 	"github.com/hashicorp/vault-mcp-server/pkg/tools/kv"
 	"github.com/hashicorp/vault-mcp-server/pkg/tools/pki"
 	"github.com/hashicorp/vault-mcp-server/pkg/tools/sys"
@@ -22,6 +23,50 @@ func InitTools(hcServer *server.MCPServer, logger *log.Logger) {
 
 	deleteMountTool := sys.DeleteMount(logger)
 	hcServer.AddTool(deleteMountTool.Tool, deleteMountTool.Handler)
+
+	// Tools for Vault namespace management (Vault Enterprise)
+	listNamespacesTool := sys.ListNamespaces(logger)
+	hcServer.AddTool(listNamespacesTool.Tool, listNamespacesTool.Handler)
+
+	// Tools for Vault policy management
+	listPoliciesTool := sys.ListPolicies(logger)
+	hcServer.AddTool(listPoliciesTool.Tool, listPoliciesTool.Handler)
+
+	readPolicyTool := sys.ReadPolicy(logger)
+	hcServer.AddTool(readPolicyTool.Tool, readPolicyTool.Handler)
+
+	// Tools for Vault auth method management
+	listAuthMethodsTool := sys.ListAuthMethods(logger)
+	hcServer.AddTool(listAuthMethodsTool.Tool, listAuthMethodsTool.Handler)
+
+	readAuthMethodTool := sys.ReadAuthMethod(logger)
+	hcServer.AddTool(readAuthMethodTool.Tool, readAuthMethodTool.Handler)
+
+	// Tools for Vault replication status
+	readReplicationStatusTool := sys.ReadReplicationStatus(logger)
+	hcServer.AddTool(readReplicationStatusTool.Tool, readReplicationStatusTool.Handler)
+
+	// Tools for Vault cluster health
+	readClusterHealthTool := sys.ReadClusterHealth(logger)
+	hcServer.AddTool(readClusterHealthTool.Tool, readClusterHealthTool.Handler)
+
+	// Tools for Vault telemetry metrics
+	readMetricsTool := sys.ReadMetrics(logger)
+	hcServer.AddTool(readMetricsTool.Tool, readMetricsTool.Handler)
+
+	// Tools for Vault lease management
+	listLeasesTool := sys.ListLeases(logger)
+	hcServer.AddTool(listLeasesTool.Tool, listLeasesTool.Handler)
+
+	readLeaseTool := sys.ReadLease(logger)
+	hcServer.AddTool(readLeaseTool.Tool, readLeaseTool.Handler)
+
+	// Tools for auth method role management
+	listAuthRolesTool := auth.ListAuthRoles(logger)
+	hcServer.AddTool(listAuthRolesTool.Tool, listAuthRolesTool.Handler)
+
+	readAuthRoleTool := auth.ReadAuthRole(logger)
+	hcServer.AddTool(readAuthRoleTool.Tool, readAuthRoleTool.Handler)
 
 	// Tools for KV secrets management
 	listSecretsTool := kv.ListSecrets(logger)
