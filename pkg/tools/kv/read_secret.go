@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/hashicorp/vault-mcp-server/pkg/client"
 	"github.com/hashicorp/vault-mcp-server/pkg/utils"
 
@@ -29,6 +30,10 @@ func ReadSecret(logger *log.Logger) server.ServerTool {
 			mcp.WithString("path",
 				mcp.Required(),
 				mcp.Description("The full path to read the secret to without the mount prefix. For example, if you want to read from 'secrets/application/credentials', this should be 'application/credentials'."),
+			),
+			mcp.WithString("namespace",
+				mcp.DefaultString(""),
+				mcp.Description("Namespace path to use (e.g., 'admin/' or empty for root). Defaults to current namespace."),
 			),
 		),
 		Handler: func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -56,9 +61,12 @@ func readSecretHandler(ctx context.Context, req mcp.CallToolRequest, logger *log
 		return mcp.NewToolResultError("Missing or invalid 'path' parameter"), nil
 	}
 
+	namespace, _ := args["namespace"].(string)
+
 	logger.WithFields(log.Fields{
-		"mount": mount,
-		"path":  path,
+		"mount":     mount,
+		"path":      path,
+		"namespace": namespace,
 	}).Debug("Reading secret")
 
 	// Get Vault client from context
@@ -68,7 +76,14 @@ func readSecretHandler(ctx context.Context, req mcp.CallToolRequest, logger *log
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get Vault client: %v", err)), nil
 	}
 
-	mounts, err := vault.Sys().ListMounts()
+	// Create a new client instance with the specified namespace if provided
+	nsClient := vault
+	if namespace != "" {
+		nsClient = vault.WithNamespace(namespace)
+		logger.WithField("namespace", namespace).Debug("Using specified namespace")
+	}
+
+	mounts, err := nsClient.Sys().ListMounts()
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("failed to list mounts: %v", err)), nil
 	}
@@ -91,7 +106,7 @@ func readSecretHandler(ctx context.Context, req mcp.CallToolRequest, logger *log
 	}
 
 	// Read the secret
-	secret, err := vault.Logical().Read(fullPath)
+	secret, err := nsClient.Logical().Read(fullPath)
 	if err != nil {
 		logger.WithError(err).WithFields(log.Fields{
 			"mount":     mount,
