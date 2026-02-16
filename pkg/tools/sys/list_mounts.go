@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/hashicorp/vault-mcp-server/pkg/client"
 	"github.com/hashicorp/vault-mcp-server/pkg/utils"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -26,12 +27,15 @@ type Mount struct {
 func ListMounts(logger *log.Logger) server.ServerTool {
 	return server.ServerTool{
 		Tool: mcp.NewTool("list_mounts",
+			mcp.WithDescription("List the available mounted secrets engines on a Vault Server."),
 			mcp.WithToolAnnotation(
 				mcp.ToolAnnotation{
 					IdempotentHint: utils.ToBoolPtr(true),
 				},
 			),
-			mcp.WithDescription("List the available mounted secrets engines on a Vault Server."),
+			mcp.WithString("namespace",
+				mcp.DefaultString(""),
+				mcp.Description("Namespace path to list mounts from (e.g., 'admin/' or empty for root). Defaults to current namespace.")),
 		),
 		Handler: func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 			return listMountHandler(ctx, req, logger)
@@ -42,6 +46,18 @@ func ListMounts(logger *log.Logger) server.ServerTool {
 func listMountHandler(ctx context.Context, req mcp.CallToolRequest, logger *log.Logger) (*mcp.CallToolResult, error) {
 	logger.Debug("Handling list_mounts request")
 
+	// Extract parameters
+	args, ok := req.Params.Arguments.(map[string]interface{})
+	if !ok {
+		return mcp.NewToolResultError("Missing or invalid arguments format"), nil
+	}
+
+	namespace, _ := args["namespace"].(string)
+
+	logger.WithFields(log.Fields{
+		"namespace": namespace,
+	}).Debug("Listing mounts")
+
 	// Get Vault client from context
 	vault, err := client.GetVaultClientFromContext(ctx, logger)
 	if err != nil {
@@ -49,8 +65,15 @@ func listMountHandler(ctx context.Context, req mcp.CallToolRequest, logger *log.
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get Vault client: %v", err)), nil
 	}
 
+	// Create a new client instance with the specified namespace if provided
+	nsClient := vault
+	if namespace != "" {
+		nsClient = vault.WithNamespace(namespace)
+		logger.WithField("namespace", namespace).Debug("Using specified namespace")
+	}
+
 	// List mounts from Vault
-	mounts, err := vault.Sys().ListMounts()
+	mounts, err := nsClient.Sys().ListMounts()
 	if err != nil {
 		logger.WithError(err).Error("Failed to list mounts")
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to list mounts: %v", err)), nil
