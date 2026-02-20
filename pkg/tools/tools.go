@@ -5,6 +5,7 @@ package tools
 
 import (
 	"github.com/hashicorp/vault-mcp-server/pkg/tools/auth"
+	"github.com/hashicorp/vault-mcp-server/pkg/tools/identity"
 	"github.com/hashicorp/vault-mcp-server/pkg/tools/kv"
 	"github.com/hashicorp/vault-mcp-server/pkg/tools/pki"
 	"github.com/hashicorp/vault-mcp-server/pkg/tools/sys"
@@ -54,6 +55,10 @@ func InitTools(hcServer *server.MCPServer, logger *log.Logger) {
 	readMetricsTool := sys.ReadMetrics(logger)
 	hcServer.AddTool(readMetricsTool.Tool, readMetricsTool.Handler)
 
+	// Tools for Vault host diagnostics
+	readHostInfoTool := sys.ReadHostInfo(logger)
+	hcServer.AddTool(readHostInfoTool.Tool, readHostInfoTool.Handler)
+
 	// Tools for Vault lease management
 	listLeasesTool := sys.ListLeases(logger)
 	hcServer.AddTool(listLeasesTool.Tool, listLeasesTool.Handler)
@@ -67,6 +72,31 @@ func InitTools(hcServer *server.MCPServer, logger *log.Logger) {
 
 	readAuthRoleTool := auth.ReadAuthRole(logger)
 	hcServer.AddTool(readAuthRoleTool.Tool, readAuthRoleTool.Handler)
+
+	lookupSelfTool := auth.LookupSelf(logger)
+	hcServer.AddTool(lookupSelfTool.Tool, lookupSelfTool.Handler)
+
+	introspectSelfTool := auth.IntrospectSelf(logger)
+	hcServer.AddTool(introspectSelfTool.Tool, introspectSelfTool.Handler)
+
+	analyzeSecretAccessTool := auth.AnalyzeSecretAccess(logger)
+	hcServer.AddTool(analyzeSecretAccessTool.Tool, analyzeSecretAccessTool.Handler)
+
+	// Tools for Vault identity entities and aliases
+	listEntitiesTool := identity.ListEntities(logger)
+	hcServer.AddTool(listEntitiesTool.Tool, listEntitiesTool.Handler)
+
+	readEntityTool := identity.ReadEntity(logger)
+	hcServer.AddTool(readEntityTool.Tool, readEntityTool.Handler)
+
+	listEntityAliasesTool := identity.ListEntityAliases(logger)
+	hcServer.AddTool(listEntityAliasesTool.Tool, listEntityAliasesTool.Handler)
+
+	readEntityAliasTool := identity.ReadEntityAlias(logger)
+	hcServer.AddTool(readEntityAliasTool.Tool, readEntityAliasTool.Handler)
+
+	readEntitySelfTool := identity.ReadEntitySelf(logger)
+	hcServer.AddTool(readEntitySelfTool.Tool, readEntitySelfTool.Handler)
 
 	// Tools for KV secrets management
 	listSecretsTool := kv.ListSecrets(logger)
