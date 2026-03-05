@@ -4,6 +4,7 @@
 package tools
 
 import (
+	"github.com/hashicorp/vault-mcp-server/pkg/tools/auth"
 	"github.com/hashicorp/vault-mcp-server/pkg/tools/kv"
 	"github.com/hashicorp/vault-mcp-server/pkg/tools/pki"
 	"github.com/hashicorp/vault-mcp-server/pkg/tools/sys"
@@ -22,6 +23,13 @@ func InitTools(hcServer *server.MCPServer, logger *log.Logger) {
 
 	deleteMountTool := sys.DeleteMount(logger)
 	hcServer.AddTool(deleteMountTool.Tool, deleteMountTool.Handler)
+
+	// Tools for auth method role management
+	listAuthRolesTool := auth.ListAuthRoles(logger)
+	hcServer.AddTool(listAuthRolesTool.Tool, listAuthRolesTool.Handler)
+
+	readAuthRoleTool := auth.ReadAuthRole(logger)
+	hcServer.AddTool(readAuthRoleTool.Tool, readAuthRoleTool.Handler)
 
 	// Tools for KV secrets management
 	listSecretsTool := kv.ListSecrets(logger)
