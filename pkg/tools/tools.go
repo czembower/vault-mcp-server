@@ -4,6 +4,7 @@
 package tools
 
 import (
+	"github.com/hashicorp/vault-mcp-server/pkg/tools/identity"
 	"github.com/hashicorp/vault-mcp-server/pkg/tools/kv"
 	"github.com/hashicorp/vault-mcp-server/pkg/tools/pki"
 	"github.com/hashicorp/vault-mcp-server/pkg/tools/sys"
@@ -22,6 +23,19 @@ func InitTools(hcServer *server.MCPServer, logger *log.Logger) {
 
 	deleteMountTool := sys.DeleteMount(logger)
 	hcServer.AddTool(deleteMountTool.Tool, deleteMountTool.Handler)
+
+	// Tools for Vault identity entities and aliases
+	listEntitiesTool := identity.ListEntities(logger)
+	hcServer.AddTool(listEntitiesTool.Tool, listEntitiesTool.Handler)
+
+	readEntityTool := identity.ReadEntity(logger)
+	hcServer.AddTool(readEntityTool.Tool, readEntityTool.Handler)
+
+	listEntityAliasesTool := identity.ListEntityAliases(logger)
+	hcServer.AddTool(listEntityAliasesTool.Tool, listEntityAliasesTool.Handler)
+
+	readEntityAliasTool := identity.ReadEntityAlias(logger)
+	hcServer.AddTool(readEntityAliasTool.Tool, readEntityAliasTool.Handler)
 
 	// Tools for KV secrets management
 	listSecretsTool := kv.ListSecrets(logger)
