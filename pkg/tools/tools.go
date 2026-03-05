@@ -23,6 +23,17 @@ func InitTools(hcServer *server.MCPServer, logger *log.Logger) {
 	deleteMountTool := sys.DeleteMount(logger)
 	hcServer.AddTool(deleteMountTool.Tool, deleteMountTool.Handler)
 
+	// Tools for Vault namespace management (Vault Enterprise)
+	listNamespacesTool := sys.ListNamespaces(logger)
+	hcServer.AddTool(listNamespacesTool.Tool, listNamespacesTool.Handler)
+
+	// Tools for Vault policy management
+	listPoliciesTool := sys.ListPolicies(logger)
+	hcServer.AddTool(listPoliciesTool.Tool, listPoliciesTool.Handler)
+
+	readPolicyTool := sys.ReadPolicy(logger)
+	hcServer.AddTool(readPolicyTool.Tool, readPolicyTool.Handler)
+
 	// Tools for KV secrets management
 	listSecretsTool := kv.ListSecrets(logger)
 	hcServer.AddTool(listSecretsTool.Tool, listSecretsTool.Handler)
